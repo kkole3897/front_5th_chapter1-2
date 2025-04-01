@@ -35,8 +35,6 @@ export function removeEvent(element, eventType, handler) {
     eventListeners.delete(key);
   }
 
-  console.log(cleanup);
-
   if (cleanup) {
     cleanup();
     cleanupListeners.delete(matchedEventListener.handler);
