@@ -2,7 +2,12 @@ name: GitHub Pages
 
 on:
   workflow_dispatch:
-
+    inputs:
+      environment:
+        type: choice
+        options:
+          - github-pages
+        default: github-pages
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -10,12 +15,17 @@ jobs:
       contents: write
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
+    environment: ${{ github.event.inputs.environment }}
 
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: true
           fetch-depth: 0
+      - name: Generate .env File
+        run: jq -r 'to_entries|map("\(.key)=\(.value|tostring)")|.[]' <<< $VARIABLE_CONTEXT > .env
+        env:
+          VARIABLE_CONTEXT: ${{ toJson(vars) }}
       - uses: pnpm/action-setup@v4
         with:
           version: latest
