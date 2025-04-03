@@ -32,6 +32,18 @@ function updateAttributes(target, originNewProps, originOldProps) {
     return;
   }
 
+  for (const key of Object.keys(originOldProps)) {
+    if (!Object.keys(originNewProps).includes(key)) {
+      if (key.startsWith("on")) {
+        removeEvent(target, key.slice(2).toLowerCase(), originOldProps[key]);
+      } else if (key === "className") {
+        target.removeAttribute("class");
+      } else {
+        target.removeAttribute(key);
+      }
+    }
+  }
+
   for (const [key, value] of Object.entries(originNewProps)) {
     if (Object.keys(originOldProps).includes(key)) {
       if (originOldProps[key] !== value) {
@@ -51,18 +63,6 @@ function updateAttributes(target, originNewProps, originOldProps) {
         target.className = value;
       } else {
         target.setAttribute(key, value);
-      }
-    }
-  }
-
-  for (const key of Object.keys(originOldProps)) {
-    if (!Object.keys(originNewProps).includes(key)) {
-      if (key.startsWith("on")) {
-        removeEvent(target, key.slice(2).toLowerCase(), originOldProps[key]);
-      } else if (key === "className") {
-        target.removeAttribute("class");
-      } else {
-        target.removeAttribute(key);
       }
     }
   }
