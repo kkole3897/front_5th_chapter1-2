@@ -1,4 +1,4 @@
-export class NotFoundListenerError extends Error {
+class NotFoundListenerError extends Error {
   static MESSAGE = "NotFoundListenerError";
 
   constructor() {
@@ -6,22 +6,23 @@ export class NotFoundListenerError extends Error {
   }
 }
 
-const listeners = {};
+class DuplicatedEventTypeError extends Error {
+  static MESSAGE = "DuplicatedEventTypeError";
 
-export function setupEventListeners(root) {
-  for (const key in listeners) {
-    const listener = listeners[key];
-    listener.add(root);
-    listener.remove = () => {
-      root.removeEventListener(listener.eventType, listener.handler);
-      delete listeners[key];
-    };
+  constructor() {
+    super(DuplicatedEventTypeError.MESSAGE);
   }
 }
 
-const generateEventListenerKey = (element, eventType, handler) => {
-  return JSON.stringify({ element, eventType, handler });
-};
+class NotFoundRegisteredHandlerError extends Error {
+  static MESSAGE = "NotFoundRegisteredHandlerError";
+
+  constructor() {
+    super(NotFoundRegisteredHandlerError.MESSAGE);
+  }
+}
+
+const listeners = new Map();
 
 const createHandler = (element, handler) => {
   return (e) => {
@@ -31,30 +32,61 @@ const createHandler = (element, handler) => {
   };
 };
 
+export function setupEventListeners(root) {
+  for (const listener of listeners.values()) {
+    for (const eventType of Object.keys(listener)) {
+      const createdHandler = createHandler(
+        listener[eventType].element,
+        listener[eventType].handler,
+      );
+      listener[eventType].add(root, createdHandler);
+      listener[eventType].remove = () => {
+        root.removeEventListener(eventType, createdHandler);
+        delete listener[eventType];
+      };
+    }
+  }
+}
+
 const noop = () => {};
 
 export function addEvent(element, eventType, handler) {
-  const createdHandler = createHandler(element, handler);
+  if (!listeners.has(element)) {
+    listeners.set(element, {
+      [eventType]: {
+        element,
+        handler,
+        add: (root, handler) => root.addEventListener(eventType, handler),
+        remove: noop,
+      },
+    });
+    return;
+  }
 
-  const key = generateEventListenerKey(element, eventType, handler);
+  const listener = listeners.get(element);
 
-  listeners[key] = {
-    eventType,
-    handler: createdHandler,
-    add: (root) => {
-      root.addEventListener(eventType, createdHandler);
-    },
-    remove: noop,
-  };
+  if (listener[eventType]) {
+    throw new DuplicatedEventTypeError();
+  }
+
+  listener[eventType] = { handler, cleanup: noop };
 }
 
 export function removeEvent(element, eventType, handler) {
-  const key = generateEventListenerKey(element, eventType, handler);
-  const listener = listeners[key];
-
-  if (!listener) {
+  if (!listeners.has(element)) {
     throw new NotFoundListenerError();
   }
 
-  listener.remove();
+  const listener = listeners.get(element);
+  const registeredHandler = listener[eventType];
+
+  if (
+    !registeredHandler ||
+    registeredHandler.handler !== handler ||
+    registeredHandler.element !== element
+  ) {
+    throw new NotFoundRegisteredHandlerError();
+  }
+
+  registeredHandler.remove();
 }
