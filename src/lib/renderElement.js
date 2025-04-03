@@ -11,13 +11,13 @@ export function renderElement(vNode, container) {
   // 렌더링이 완료되면 container에 이벤트를 등록한다.
   const normalizedVNode = normalizeVNode(vNode);
 
-  if (!oldNode) {
-    const element = createElement(normalizedVNode);
-    container.replaceChildren(element);
-    oldNode = normalizedVNode;
-  } else {
+  if (container.hasChildNodes() && oldNode) {
     updateElement(container, normalizedVNode, oldNode);
+  } else {
+    const element = createElement(normalizedVNode);
+    container.appendChild(element);
   }
 
   setupEventListeners(container);
+  oldNode = normalizedVNode;
 }

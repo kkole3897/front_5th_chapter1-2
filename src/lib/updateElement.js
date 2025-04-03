@@ -9,33 +9,35 @@ function updateAttributes(target, originNewProps, originOldProps) {
   if (!originNewProps && originOldProps) {
     for (const key of Object.keys(originOldProps)) {
       if (key.startsWith("on")) {
-        removeEvent(target, key, originOldProps[key]);
+        removeEvent(target, key.slice(2).toLowerCase(), originOldProps[key]);
       } else if (key === "className") {
         target.removeAttribute("class");
       } else {
         target.removeAttribute(key);
       }
     }
+    return;
   }
 
   if (originNewProps && !originOldProps) {
     for (const key of Object.keys(originNewProps)) {
       if (key.startsWith("on")) {
-        addEvent(target, key, originNewProps[key]);
+        addEvent(target, key.slice(2).toLowerCase(), originNewProps[key]);
       } else if (key === "className") {
         target.className = originNewProps[key];
       } else {
         target.setAttribute(key, originNewProps[key]);
       }
     }
+    return;
   }
 
   for (const [key, value] of Object.entries(originNewProps)) {
     if (Object.keys(originOldProps).includes(key)) {
       if (originOldProps[key] !== value) {
         if (key.startsWith("on")) {
-          removeEvent(target, key, originOldProps[key]);
-          addEvent(target, key, value);
+          removeEvent(target, key.slice(2).toLowerCase(), originOldProps[key]);
+          addEvent(target, key.slice(2).toLowerCase(), value);
         } else if (key === "className") {
           target.className = value;
         } else {
@@ -44,7 +46,7 @@ function updateAttributes(target, originNewProps, originOldProps) {
       }
     } else {
       if (key.startsWith("on")) {
-        addEvent(target, key, value);
+        addEvent(target, key.slice(2).toLowerCase(), value);
       } else if (key === "className") {
         target.className = value;
       } else {
@@ -56,7 +58,7 @@ function updateAttributes(target, originNewProps, originOldProps) {
   for (const key of Object.keys(originOldProps)) {
     if (!Object.keys(originNewProps).includes(key)) {
       if (key.startsWith("on")) {
-        removeEvent(target, key, originOldProps[key]);
+        removeEvent(target, key.slice(2).toLowerCase(), originOldProps[key]);
       } else {
         target.removeAttribute(key);
       }
