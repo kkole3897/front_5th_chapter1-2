@@ -59,6 +59,8 @@ function updateAttributes(target, originNewProps, originOldProps) {
     if (!Object.keys(originNewProps).includes(key)) {
       if (key.startsWith("on")) {
         removeEvent(target, key.slice(2).toLowerCase(), originOldProps[key]);
+      } else if (key === "className") {
+        target.removeAttribute("class");
       } else {
         target.removeAttribute(key);
       }
@@ -68,7 +70,9 @@ function updateAttributes(target, originNewProps, originOldProps) {
 
 export function updateElement(parentElement, newNode, oldNode, index = 0) {
   if (oldNode != null && newNode == null) {
-    parentElement.removeChild(parentElement.children[index]);
+    const element = parentElement.children[index];
+    updateAttributes(element, null, oldNode.props);
+    parentElement.removeChild(element);
     return;
   }
 
@@ -80,13 +84,17 @@ export function updateElement(parentElement, newNode, oldNode, index = 0) {
 
   if (typeof newNode === "string" || typeof newNode === "number") {
     if (newNode !== oldNode) {
-      parentElement.textContent = newNode;
+      parentElement.textContent = parentElement.textContent.replace(
+        oldNode,
+        newNode,
+      );
     }
     return;
   }
 
   if (oldNode.type !== newNode.type) {
     const element = createElement(newNode);
+    updateAttributes(parentElement.children[index], null, oldNode.props);
     parentElement.replaceChild(element, parentElement.children[index]);
     return;
   }
@@ -113,7 +121,7 @@ export function updateElement(parentElement, newNode, oldNode, index = 0) {
     return;
   }
 
-  for (let i = 0; i < newChildren.length; i++) {
+  for (let i = 0; i < Math.max(newChildren.length, oldChildren.length); i++) {
     updateElement(element, newChildren[i], oldChildren[i], i);
   }
 }
