@@ -12,6 +12,15 @@ export default mergeConfig(
         jsxFactory: "createVNode",
       },
     },
+    base: "./",
+    build: {
+      rollupOptions: {
+        input: {
+          main: "./index.html",
+          hash: "./index.hash.html",
+        },
+      },
+    },
   }),
   defineTestConfig({
     test: {
