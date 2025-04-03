@@ -32,6 +32,8 @@ const createHandler = (element, handler) => {
   };
 };
 
+const noop = () => {};
+
 export function setupEventListeners(root) {
   for (const listener of listeners.values()) {
     for (const eventType of Object.keys(listener)) {
@@ -44,11 +46,10 @@ export function setupEventListeners(root) {
         root.removeEventListener(eventType, createdHandler);
         delete listener[eventType];
       };
+      listener[eventType].add = noop;
     }
   }
 }
-
-const noop = () => {};
 
 export function addEvent(element, eventType, handler) {
   if (!listeners.has(element)) {
@@ -69,7 +70,12 @@ export function addEvent(element, eventType, handler) {
     throw new DuplicatedEventTypeError();
   }
 
-  listener[eventType] = { handler, cleanup: noop };
+  listener[eventType] = {
+    element,
+    handler,
+    add: (root, handler) => root.addEventListener(eventType, handler),
+    remove: noop,
+  };
 }
 
 export function removeEvent(element, eventType, handler) {
