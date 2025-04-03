@@ -5,19 +5,18 @@ import { globalStore } from "./stores";
 import { ForbiddenError, UnauthorizedError } from "./errors";
 import { router } from "./router";
 import { render } from "./render";
-import { PREFIX_PATH } from "./constants";
 
 router.set(
   createRouter({
-    [`${PREFIX_PATH}/`]: HomePage,
-    [`${PREFIX_PATH}/login`]: () => {
+    "/": HomePage,
+    "/login": () => {
       const { loggedIn } = globalStore.getState();
       if (loggedIn) {
         throw new ForbiddenError();
       }
       return <LoginPage />;
     },
-    [`${PREFIX_PATH}/profile`]: () => {
+    "/profile": () => {
       const { loggedIn } = globalStore.getState();
       if (!loggedIn) {
         throw new UnauthorizedError();
